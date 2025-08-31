@@ -3,12 +3,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { auth } from "@/auth"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import ThreadsHome from '@/components/newsfeed';
+import { Header } from '@/components/header-client';
+import Intro from '@/components/intro';
 export default async function Page() {
-  const session = await auth()
   return (
-    <p className={` text-xl text-gray-800 md:text-3xl md:leading-normal`}>
-            {JSON.stringify(session)}
-    </p>
-      
+    <>
+      <Header />
+      <Intro/>
+    </>
   );
 }

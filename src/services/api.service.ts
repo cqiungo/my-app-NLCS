@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-function createApiClient(baseUrl: string) {
+function createApiClient(baseUrl: string, token?: string) {
   const instance = axios.create({
     baseURL: baseUrl,
     headers: {

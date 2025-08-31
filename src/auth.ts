@@ -3,20 +3,7 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { InvalidEmailPasswordError } from "./utils/error"
 
-import type { User as NextAuthUser } from "next-auth";
-
-declare module "next-auth" {
-  interface User {
-    accessToken?: string;
-    refreshToken?: string;
-    role?: string;
-    // Add other properties from NextAuthUser if needed, e.g.:
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-    id?: string | null;
-  }
-}
+import { IUser } from "./types/next-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -24,6 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
+
       },
       authorize: async (credentials) => {
         const res = await fetch("http://localhost:3001/api/v1/auth/login", {
@@ -45,8 +33,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: data.user.email,
           name: data.user.username,
           accessToken: data.access_token,
-          refreshToken: data.refresh_token,
           role: data.user.role,
+          image: data.user.image,
         };
       },
     }),
@@ -57,18 +45,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = user.accessToken;
-        token.refreshToken = user.refreshToken;
-        token.role = user.role;
+        token.user = user as IUser;
       }
       return token;
     },
     async session({ session, token }) {
-      session.access_token = token.accessToken as string;
-      session.refresh_token = token.refreshToken as string;
-      session.user.role = token.role as string;
+      (session.user as IUser) = token.user;
       return session;
-    }
+    },
+    authorized: async ({ auth }) => {
+      // Logged in users are authenticated, otherwise redirect to login page
+      return !!auth
+    },
+
   },
   session: {
     strategy: "jwt",

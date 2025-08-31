@@ -11,17 +11,29 @@ class UserService {
   async create(data: any) {
     return (await this.api.post('/', data)).data;
   }
-
+  async register(data: any) {
+    return (await this.api.post('/auth/register', data)).data;
+  }
   async login(data: any) {
     return (await this.api.post('/auth/login', data)).data;
   }
 
-  async getAll() {
-    return (await this.api.get('/')).data;
+  async getAll(token?: string) {
+    return (await this.api.get('/user',{
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Uncomment if you need to pass a token
+      }
+    })).data;
   }
 
-  async deleteAll() {
-    return (await this.api.delete('/')).data;
+  async deleteAll(token?: string) {
+    return (await this.api.delete('/',{
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      }
+    })).data;
   }
 
   async getByPage(page: any) {
@@ -36,8 +48,14 @@ class UserService {
     return (await this.api.get(`/${id}`)).data;
   }
 
-  async update(id: any, data: any) {
-    return (await this.api.put(`/${id}`, data)).data;
+  async update(id: any, data: any,token?: string) {
+    console.log(token);
+    return (await this.api.patch(`/user/${id}`, data,{
+      headers:{
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Assuming token is part of data
+      }
+    })).data;
   }
 
   async delete(id: any) {

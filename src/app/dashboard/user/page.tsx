@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
-import UserBoard from '../../components/UserBoard/userBoardPage'
+import UserBoard from '@/components/UserBoard/userBoardPage'
 export default function ManageUserPage(){
     return (
         <>

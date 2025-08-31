@@ -43,12 +43,28 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { Typography } from 'antd';
+import Animations from '../ui/another-skeleton';
 import Badge from '@mui/material/Badge';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import userService from '@/services/user.service';
-const roles = ['Market', 'Finance', 'Development'];
-const randomRole = () => randomArrayItem(roles);
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useUser } from '@/context/UserContext';
+import Grid from '@mui/material/Grid';
+import { styled } from '@mui/material/styles';
+import UserFormDialog from '@/components/App/UserFormDialog';
+import EditUserForm from '../App/EditUserForm';
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: '#fff',
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'center',
+  color: (theme.vars ?? theme).palette.text.secondary,
+  ...theme.applyStyles('dark', {
+    backgroundColor: '#1A2027',
+  }),
+}));
 
 function EditToolbar(props: GridSlotProps['toolbar']) {
   const apiRef = useGridApiContext();
@@ -79,35 +95,23 @@ function EditToolbar(props: GridSlotProps['toolbar']) {
     }
   };
 
-  const { setRows, setRowModesModel } = props;
   const createEmptyRow = () => {
     const id = randomId();
     return {
       id,
       name: '',
-      age: null,
-      joinDate: null,
+      email: null,
+      phone: '',
       role: '',
-      x: '',
-      a: '',
-      c: '',
       isNew: true,
     };
   };
 
-  const handleAddClick = () => {
-    const newRow = createEmptyRow();
-    setRows((oldRows) => [...oldRows, newRow]);
-    setRowModesModel((oldModel) => ({
-      ...oldModel,
-      [newRow.id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' }, // ✅ dùng đúng ID
-    }));
-  };
 
   return (
     <Toolbar>
       <Tooltip title="Thêm dòng mới">
-        <ToolbarButton onClick={handleAddClick}>
+        <ToolbarButton>
           <AddIcon fontSize="small" />
         </ToolbarButton>
       </Tooltip>
@@ -187,61 +191,55 @@ function EditToolbar(props: GridSlotProps['toolbar']) {
   );
 }
 
-const initialRows: GridRowsProp = [
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 25,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 36,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 19,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 28,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 23,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-];
-
 export default function FullFeaturedCrudGrid() {
-  const [rows, setRows] = React.useState(initialRows);
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>({});
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [selectedRowId, setSelectedRowId] = React.useState<GridRowId | null>(null);
+  const [editFormOpen, setEditFormOpen] = React.useState(false);
+  const token = useUser().user?.access_token;
+  const [user, setUser] = React.useState<any[]>([]);
+  const [form,setFormOpen] = React.useState(false);
+  const [editUser,setEditUser] = React.useState<any>(null);
+  const Usersrow : GridRowsProp = [...user]
+  const handleFormOpen =()=>{
+    setFormOpen(true);
+  }
+  const handleFormClose =() =>{
+    setFormOpen(false);
+  }
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await userService.getAll(token);
+        setUser(response);
+      } catch (error) {
+      }
+    }
+    fetchUsers();
+  }, []);
+  const [rows, setRows] = React.useState(Usersrow);
 
   const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
     if (params.reason === GridRowEditStopReasons.rowFocusOut) {
       event.defaultMuiPrevented = false;
     }
   };
-  const test = async ()=>{
-    const a = await userService.getAll();
-    console.log(a);
-  }
   const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel((prev) => ({ ...prev, [id]: { mode: GridRowModes.Edit } }));
+    console.log("handleEditClick", id);
+    const tmp = user.find((row) => row._id === id);
+    const ho = tmp.name.split(' ')[0];
+    const ten = tmp.name.split(' ').slice(1).join(' ');
+    console.log("tmp", tmp);
+    setEditUser({
+      id:id,
+      ho: ho,
+      ten: ten,
+      address: tmp.address,
+      phone: tmp.phone,
+      email: tmp.email,
+      role: tmp.role,
+    });
+    setEditFormOpen(true);
   };
 
   const handleSaveClick = (id: GridRowId) => () => {
@@ -283,40 +281,69 @@ export default function FullFeaturedCrudGrid() {
     setRowModesModel(newModel);
   };
 
+  const handleSubmitUser = async (formData: any) => {
+    try {
+      const name = `${formData.ho} ${formData.ten}`;
+      const userData = {
+        name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        role: formData.role || 'user', // Default role if not provided
+      };
+      // const response = await userService.create(formData);
+      // console.log("User created successfully:", response);
+      // setFormOpen(false);
+      // // Optionally, you can fetch the updated user list or add the new user to the state
+      // setUser((prevUsers) => [...prevUsers, response]);
+      console.log("User data submitted:", formData);
+    } catch (error) {
+      console.error("Error creating user:", error);
+    }
+  }
+  const handleEditUser = async (formData: any) =>{
+    try {
+
+      const name = `${formData.ho} ${formData.ten}`;
+      const userData = {
+        name,
+        email: formData.email,
+        phone: formData.phoneNumber,
+        address: formData.address,
+        role: formData.role || 'user', // Default role if not provided
+      };
+      const response = await userService.update(editUser.id, userData, token);
+      console.log("User updated successfully:", response);
+      setEditFormOpen(false);
+      // Optionally, you can fetch the updated user list or update the user in the state
+      setUser((prevUsers) => prevUsers.map((user) => (user._id === editUser._id ? {
+        ...user,
+        name: userData.name, // Ensure the name is updated correctly
+        email: userData.email,
+        phone: userData.phone,
+        address: userData.address,
+        role: userData.role, // Ensure the role is updated correctly
+      } : user)));
+    }
+    catch (error) {
+      console.error("Error updating user:", error);
+    }
+  }
   const columns: GridColDef[] = [
-    { field: 'name', headerName: 'Name', editable: true, flex: 1 },
-    { field: 'age', headerName: 'Age', type: 'number', editable: true, flex: 1 },
-    { field: 'joinDate', headerName: 'Join date', type: 'date', editable: true, flex: 1 },
+    { field: 'name', headerName: 'Name',  flex: 1 },
+    { field: 'email', headerName: 'Email',  flex: 1 },
+    { field: 'phone', headerName: 'Phone',  flex: 1 },
     {
       field: 'role',
       headerName: 'Department',
-      editable: true,
       type: 'singleSelect',
-      valueOptions: roles,
       flex: 1,
     },
-    { field: 'x', headerName: 'b', editable: true, flex: 1 },
-    { field: 'a', headerName: 'bcc', editable: true, flex: 1 },
-    { field: 'c', headerName: 'abcc', editable: true, flex: 1 },
     {
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
       getActions: ({ id }) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={handleSaveClick(id)} />,
-            <GridActionsCellItem
-              icon={<CancelIcon />}
-              label="Cancel"
-              onClick={handleCancelClick(id)}
-              color="inherit"
-            />,
-          ];
-        }
-
         return [
           <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(id)} />,
           <GridActionsCellItem
@@ -333,6 +360,10 @@ export default function FullFeaturedCrudGrid() {
 
   return (
     <>
+    
+    <Dialog open={false}>
+      <DialogTitle>Set backup account</DialogTitle>
+    </Dialog>
       <Box
         sx={{
           width: '100%',
@@ -340,14 +371,15 @@ export default function FullFeaturedCrudGrid() {
           '& .textPrimary': { color: 'text.primary' },
         }}
       >
-        <Button 
-        onClick={test}
+        <Button onClick={() => setFormOpen(true)}
         sx={{
           p:2,
           mb:3
-        }}>fjdslkajfkdsf</Button>
-        <DataGrid
-          rows={rows}
+        }}>Thêm người dùng</Button>
+        { user.length >0 &&
+          <DataGrid
+          rows={user}
+          getRowId={(row) => row._id}
           columns={columns}
           editMode="row"
           rowModesModel={rowModesModel}
@@ -361,7 +393,12 @@ export default function FullFeaturedCrudGrid() {
           pagination
           pageSizeOptions={[5, 10, 20]}
           initialState={{ pagination: { paginationModel: { pageSize: 5, page: 0 } } }}
-        />
+          />
+        }
+        {
+          user.length === 0 &&
+          <Animations/>
+        }
       </Box>
 
       <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
@@ -380,7 +417,34 @@ export default function FullFeaturedCrudGrid() {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+        <UserFormDialog
+          open={form}
+          onClose={handleFormClose}
+          onSubmit={handleSubmitUser}
+          user={{
+            ho: "",
+            ten: "",
+            address: "",
+            phoneNumber: "",
+            email: "",
+            role: "",
+          }}
+        />    
+        <EditUserForm
+              open={editFormOpen}
+              onClose={() => setEditFormOpen(false)}
+              onSubmit={handleEditUser}
+              user={{
+                ho: editUser?.ho || "",
+                ten: editUser?.ten || "",
+                address: editUser?.address || "",
+                phoneNumber: editUser?.phone || "",
+                email: editUser?.email || "",
+                role: editUser?.role || "",
+              }}
+              />
+
+      </>
   );
 }
 

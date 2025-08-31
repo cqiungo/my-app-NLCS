@@ -8,11 +8,11 @@ import { alpha } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import AppNavbar from '../components/App/AppNavbar';
-import Header from '../components/App/Header';
-import MainGrid from '../components/App/MainGrid';
-import SideMenu from '../components/App/SideMenu';
-import AppTheme from '../components/shared-theme/AppTheme';
+import AppNavbar from '@/components/App/AppNavbar';
+import Header from '@/components/App/Header';
+import MainGrid from '@/components/App/MainGrid';
+import SideMenu from '@/components/App/SideMenu';
+import AppTheme from '@/components/shared-theme/AppTheme';
 import {
   chartsCustomizations,
   dataGridCustomizations,
@@ -20,6 +20,7 @@ import {
   treeViewCustomizations,
 } from '../theme/customizations';
 import { useSession } from 'next-auth/react';
+import { useUser } from '@/context/UserContext';
 
 const xThemeComponents = {
   ...chartsCustomizations,
@@ -39,10 +40,8 @@ export default function Dashboard({
   disableCustomTheme?: boolean;
   children: React.ReactNode;
 }>) {
-    const { data: session } = useSession();
-    console.log(session); 
-  
-  if (!session) return <div>Not authenticated</div>
+  const user = useUser().user;  
+  if (!user) return <div>...Loading</div>
   else return (
     <AppTheme disableCustomTheme={disableCustomTheme} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
