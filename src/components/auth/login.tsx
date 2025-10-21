@@ -20,6 +20,8 @@ import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../CustomeIcons';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/auth';
+import { useUser } from '@/context/UserContext';
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -70,36 +72,10 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [open, setOpen] = React.useState(false);
   const [login,setLogin]=React.useState(false)
   const router = useRouter()
+  const userContext = useUser();
 
   const handleClickOpen = () => {
     setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
-    event.preventDefault();
-    validateInputs();
-    const user = new FormData(event.currentTarget);
-    
-    const res = await signIn("credentials", {
-      redirect: false,
-      email: user.get("email"),
-      password: user.get("password"),
-    });
-    if (res.error===undefined) {
-      router.push('/dashboard') // chuyển hướng thủ công
-    } else {
-      console.error('Login failed:', res)
-      setLogin(false)
-    }
-
   };
 
 
@@ -129,6 +105,36 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
     return isValid;
   };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    if (emailError || passwordError) {
+      event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    validateInputs();
+    const user = new FormData(event.currentTarget);
+    
+    const res = await signIn("credentials", {
+      redirect: false,
+      email: user.get("email"),
+      password: user.get("password"),
+    });
+
+    if (res.error===undefined) {
+      if(userContext.user?.role==="admin"){
+        router.push('/dashboard')
+      }else{
+        if(userContext.user?.role==="user"){
+          router.push('/')
+        }
+      }
+    }
+    else {
+      console.error('Login failed:', res)
+      setLogin(false)
+    }
+};
 
   return (
     <div>

@@ -1,41 +1,57 @@
-"use client"
-
-import * as React from "react"
-
-import { Card, CardContent } from "@/components/ui/card"
+"use client";
+import * as React from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel"
-
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
 export function CarouselSpacing() {
+  const [api, setApi] = React.useState<CarouselApi>();
+  const [current, setCurrent] = React.useState(0);
+  const [count, setCount] = React.useState(0);
+  React.useEffect(() => {
+    if (!api) {
+      return;
+    }
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap() + 1);
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+    });
+  }, [api]);
   return (
-    <Carousel opts={{
-          align: "start",
-          loop: true,
-        }}
-            setApi={(api) => {
-            console.log("Carousel API:", api)   // 👉 xem trong console
-      }}
-      className="w-full max-w-sm">
-      <CarouselContent className="">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <CarouselItem key={index} className="pl-1 md:basis-1/2 lg:basis-1/3">
-            <div className="p-1">
+    <div className="mx-auto max-w-xs py-4">
+      <Carousel setApi={setApi} className="w-full max-w-xs">
+        <CarouselContent>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <CarouselItem key={index}>
               <Card>
-                <CardContent className="flex aspect-square items-center justify-center p-6">
-                  <span className="text-2xl font-semibold">{index + 1}</span>
+                <CardContent className="flex aspect-video items-center justify-center p-6">
+                  <span className="text-4xl font-semibold">{index + 1}</span>
                 </CardContent>
               </Card>
-            </div>
-          </CarouselItem>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="top-[calc(100%+0.5rem)] translate-y-0 left-0" />
+        <CarouselNext className="top-[calc(100%+0.5rem)] translate-y-0 left-2 translate-x-full" />
+      </Carousel>
+      <div className="mt-4 flex items-center justify-end gap-2">
+        {Array.from({ length: count }).map((_, index) => (
+          <button
+            key={index}
+            onClick={() => api?.scrollTo(index)}
+            className={cn("h-3.5 w-3.5 rounded-full border-2", {
+              "border-primary": current === index + 1,
+            })}
+          />
         ))}
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
-  )
+      </div>
+    </div>
+  );
 }

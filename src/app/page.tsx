@@ -7,11 +7,17 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import ThreadsHome from '@/components/newsfeed';
 import { Header } from '@/components/header-client';
 import Intro from '@/components/intro';
+import RestaurantGrid from '@/components/restaurant-grid';
+import Overlay from '@/components/Overlay'
 export default async function Page() {
   return (
-    <>
+    <div>
       <Header />
       <Intro/>
-    </>
+      <main style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+      <Overlay />
+      </main>
+      <RestaurantGrid/>
+    </div>
   );
 }

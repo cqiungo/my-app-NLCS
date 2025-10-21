@@ -49,7 +49,6 @@ import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import userService from '@/services/user.service';
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { useUser } from '@/context/UserContext';
 import Grid from '@mui/material/Grid';
 import { styled } from '@mui/material/styles';
