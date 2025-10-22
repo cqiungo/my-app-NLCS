@@ -1,8 +1,5 @@
-import { log } from "console"
-import NextAuth from "next-auth"
-import Credentials from "next-auth/providers/credentials"
-import { InvalidEmailPasswordError } from "./utils/error"
-
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import { IUser } from "./types/next-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -11,10 +8,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
-
       },
       authorize: async (credentials) => {
-        const res = await fetch("http://localhost:3001/api/v1/auth/login", {
+        console.log("Authorize called with credentials:", credentials);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -24,17 +21,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         const data = await res.json();
+        console.log("Login data:", data);
         if (!res.ok || !data.access_token) {
-          throw new InvalidEmailPasswordError("Invalid credentials.");
+          console.warn("❌ Sai email hoặc mật khẩu:", data);
+          return null;
         }
 
         return {
-          id: data.user._id,
+          id: data.user.id,
           email: data.user.email,
-          name: data.user.username,
+          name: data.user.name,
           accessToken: data.access_token,
           role: data.user.role,
-          image: data.user.image,
         };
       },
     }),
@@ -44,22 +42,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.user = user as IUser;
-      }
+      if (user) token.user = user as IUser;
       return token;
     },
     async session({ session, token }) {
-      (session.user as IUser) = token.user;
+      (session.user as IUser) = token.user ;
       return session;
     },
-    authorized: async ({ auth }) => {
-      // Logged in users are authenticated, otherwise redirect to login page
-      return !!auth
-    },
-
+    authorized: async ({ auth }) => !!auth,
   },
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
 });

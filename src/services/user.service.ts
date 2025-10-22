@@ -3,7 +3,7 @@ import createApiClient from './api.service';
 
 class UserService {
   api: any;
-  constructor(baseUrl='http://localhost:3001/api/v1') {
+  constructor(baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/user`) {
     console.log(baseUrl)
     this.api = createApiClient(baseUrl);
   }

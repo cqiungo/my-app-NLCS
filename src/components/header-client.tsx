@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
+import { useSession } from "next-auth/react";
 
 const navigationItems = [
   { name: "Trang chủ", href: "/" },

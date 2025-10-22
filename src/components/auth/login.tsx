@@ -18,9 +18,8 @@ import ForgotPassword from '../ForgotPassword';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../CustomeIcons';
-import { signIn } from 'next-auth/react';
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from 'next/navigation';
-import { auth } from '@/auth';
 import { useUser } from '@/context/UserContext';
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -87,7 +86,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
       setEmailError(true);
-      setEmailErrorMessage('Please enter a valid email address.');
+      setEmailErrorMessage('Nhập email hợp lệ.');
       isValid = false;
     } else {
       setEmailError(false);
@@ -96,7 +95,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
     if (!password.value || password.value.length < 6) {
       setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      setPasswordErrorMessage('Mật khẩu ít nhất 6 ký tự.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -106,34 +105,42 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     return isValid;
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
-    event.preventDefault();
-    validateInputs();
-    const user = new FormData(event.currentTarget);
-    
-    const res = await signIn("credentials", {
-      redirect: false,
-      email: user.get("email"),
-      password: user.get("password"),
-    });
+const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
 
-    if (res.error===undefined) {
-      if(userContext.user?.role==="admin"){
-        router.push('/dashboard')
-      }else{
-        if(userContext.user?.role==="user"){
-          router.push('/')
-        }
-      }
-    }
-    else {
-      console.error('Login failed:', res)
-      setLogin(false)
-    }
+  // Chạy validateInputs() để kiểm tra lỗi
+  const isValid = validateInputs();
+  if (!isValid) return; // nếu sai, dừng lại
+
+  const user = new FormData(event.currentTarget);
+  console.log({
+    email: user.get("email"),
+    password: user.get("password"),
+  });
+  setLogin(true);
+
+  const res = await signIn("credentials", {
+    redirect: false,
+    email: user.get("email"),
+    password: user.get("password"),
+  });
+
+  console.log("SignIn response:", res);
+
+  if (res.error) {
+    console.error("Login error:", res.error);
+    setEmailError(true);
+    setPasswordError(true);
+    setPasswordErrorMessage('Email hoặc mật khẩu không đúng');
+    setLogin(false);
+    return;
+  }
+
+  const session = await getSession();
+  const role = session?.user?.role;
+
+  if (role === "ADMIN") router.push("/dashboard");
+  else if (role === "USER") router.push("/");
 };
 
   return (
@@ -152,9 +159,9 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             Sign in
           </Typography>
           <Box
+            onSubmit={handleSubmit}
             component="form"
             noValidate
-            onSubmit={handleSubmit}
             sx={{
               display: 'flex',
               flexDirection: 'column',
@@ -220,22 +227,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
           </Box>
           <Divider>or</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Google')}
-              startIcon={<GoogleIcon />}
-            >
-              Sign in with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Facebook')}
-              startIcon={<FacebookIcon />}
-            >
-              Sign in with Facebook
-            </Button>
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <Link
