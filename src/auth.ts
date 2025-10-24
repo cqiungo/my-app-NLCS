@@ -10,7 +10,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        console.log("Authorize called with credentials:", credentials);
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -21,7 +20,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         const data = await res.json();
-        console.log("Login data:", data);
         if (!res.ok || !data.access_token) {
           console.warn("❌ Sai email hoặc mật khẩu:", data);
           return null;
@@ -42,11 +40,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.user = user as IUser;
+      if (user){
+        token.user = user as IUser;
+      }
       return token;
     },
     async session({ session, token }) {
-      (session.user as IUser) = token.user ;
+      (session.user as IUser) = token.user;
+      session.access_token = token.user?.accessToken;
+      session.user.role = token.user?.role;
       return session;
     },
     authorized: async ({ auth }) => !!auth,

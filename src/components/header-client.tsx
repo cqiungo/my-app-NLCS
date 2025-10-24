@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ChevronDown, Menu, User2, Sparkles } from "lucide-react"
@@ -29,15 +29,19 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const userContext = useUser().user
 
-  if (typeof window !== "undefined") {
-    window.addEventListener(
-      "scroll",
-      () => {
-        setIsScrolled(window.scrollY > 10)
-      },
-      { passive: true },
-    )
-  }
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    
+    // Cleanup khi component unmount
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [])
+
 
   return (
     <header

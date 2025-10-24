@@ -40,9 +40,7 @@ export default function Dashboard({
   disableCustomTheme?: boolean;
   children: React.ReactNode;
 }>) {
-  const user = useUser().user;  
-  if (!user) return <div>...Loading</div>
-  else return (
+  return (
     <AppTheme disableCustomTheme={disableCustomTheme} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>

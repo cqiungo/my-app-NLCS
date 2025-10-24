@@ -1,24 +1,15 @@
 // services/user.service.ts
 import createApiClient from './api.service';
 
-class UserService {
+class CategoryService {
   api: any;
   constructor(baseUrl = `${process.env.NEXT_PUBLIC_API_URL}`) {
     this.api = createApiClient(baseUrl);
   }
 
-  async create(data: any) {
-    return (await this.api.post('/', data)).data;
-  }
-  async register(data: any) {
-    return (await this.api.post('/auth/register', data)).data;
-  }
-  async login(data: any) {
-    return (await this.api.post('/auth/login', data)).data;
-  }
 
   async getAll(token?: string) {
-    return (await this.api.get('/users',{
+    return (await this.api.get('/categories',{
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}` 
@@ -67,4 +58,4 @@ class UserService {
   }
 }
 
-export default new UserService();
+export default new CategoryService();

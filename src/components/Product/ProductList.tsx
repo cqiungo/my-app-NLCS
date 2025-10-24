@@ -133,7 +133,7 @@ export default function FullFeaturedCrudGrid() {
       setEditFormOpen(false)
       setUser((prevUsers) =>
         prevUsers.map((user) =>
-          user._id === editUser._id
+          user.id === editUser.id
             ? {
                 ...user,
                 name: userData.name,

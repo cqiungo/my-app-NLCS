@@ -15,12 +15,16 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from '../ForgotPassword';
+import IconButton from '@mui/material/IconButton';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../CustomeIcons';
-import { getSession, signIn } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
+import InputAdornment from '@mui/material/InputAdornment';
+
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -65,6 +69,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [emailError, setEmailError] = React.useState(false);
+  const [showPassWord,setShowPassword]=React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
@@ -72,7 +77,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [login,setLogin]=React.useState(false)
   const router = useRouter()
   const userContext = useUser();
-
+  const session = useSession();
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -104,6 +109,10 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
     return isValid;
   };
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault(); // tránh mất focus khi click icon
+  };
 
 const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
   event.preventDefault();
@@ -125,8 +134,7 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     password: user.get("password"),
   });
 
-  console.log("SignIn response:", res);
-
+  console.log("session after login:", session.data?.user.role);
   if (res.error) {
     console.error("Login error:", res.error);
     setEmailError(true);
@@ -136,8 +144,8 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     return;
   }
 
-  const session = await getSession();
-  const role = session?.user?.role;
+  const sesion = await getSession();
+  const role = sesion?.user?.role;
 
   if (role === "ADMIN") router.push("/dashboard");
   else if (role === "USER") router.push("/");
@@ -193,10 +201,26 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
                 helperText={passwordErrorMessage}
                 name="password"
                 placeholder="••••••"
-                type="password"
+                type={showPassWord?'text':'password'}
                 id="password"
                 autoComplete="current-password"
                 autoFocus
+                slotProps={{
+                        input: {
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={handleClickShowPassword}
+                                onMouseDown={handleMouseDownPassword}
+                                edge="end"
+                                aria-label="toggle password visibility"
+                              >
+                                {showPassWord ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        },
+                      }}                
                 required
                 fullWidth
                 variant="outlined"

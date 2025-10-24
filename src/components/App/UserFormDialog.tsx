@@ -193,27 +193,29 @@ export default function UserFormDialog({ user ,open, onClose, onSubmit,editMode 
               />
             </Grid>
             <Grid size={12}>
-              <TextField
+              {!editMode && (
+                <TextField
                 fullWidth
-                id="outlined-select-currency-native"
                 select
-                defaultValue="User"
-                value={formData.role}
+                label="Vai trò"
+                value={formData.role || ""}
                 onChange={handleInputChange("role")}
                 error={!!errors.role}
-                helperText={errors.role}
+                helperText={errors.role || " "}
                 variant="standard"
                 required
               >
-                <option value="" disabled>
+                <MenuItem value="" disabled>
                   Chọn vai trò
-                </option>
+                </MenuItem>
                 {role.map((option) => (
-                  <MenuItem  key={option.value} value={option.value}>
+                  <MenuItem key={option.value} value={option.value}>
                     {option.label}
-                  </MenuItem >
+                  </MenuItem>
                 ))}
               </TextField>
+              )}
+
             </Grid>
           </Grid>
         </DialogContent>
