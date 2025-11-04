@@ -10,15 +10,34 @@ class ProductService {
 
   // 🟢 Tạo sản phẩm mới
   async create(data: any, token?: string) {
-    return (
-      await this.api.post('/', data, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      })
-    ).data;
+  const formData = new FormData();
+  formData.append("name", data.name);
+  formData.append("description", data.description);
+  formData.append("price", data.price);
+  formData.append("quantity", data.quantity);
+  formData.append("categoryId", data.categoryId);
+  formData.append("colorIds",data.color)
+  formData.append("capacityIds",data.capacity)
+
+  // ✅ Append tất cả ảnh
+  if (data.images && data.images.length > 0) {
+    data.images.forEach((image: File) => {
+      if (image instanceof File) {
+        formData.append("files", image);
+      }
+    });
   }
+
+  return (
+    await this.api.post("/", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+  ).data;
+}
+
 
   // 🟢 Lấy tất cả sản phẩm
   async getAll(token?: string) {
@@ -46,17 +65,34 @@ class ProductService {
     ).data;
   }
 
-  // 🟢 Cập nhật sản phẩm
+  // 🟢 Cập nhật sản phẩm (sửa)
   async update(id: any, data: any, token?: string) {
-    return (
-      await this.api.patch(`/${id}`, data, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      })
-    ).data;
+  const formData = new FormData();
+  formData.append("name", data.name);
+  formData.append("description", data.description);
+  formData.append("price", data.price);
+  formData.append("quantity", data.quantity);
+  formData.append("categoryId", data.categoryId);
+  formData.append("colorIds",data.color)
+  formData.append("capacityIds",data.capacity)
+  if (data.images && data.images.length > 0) {  
+    data.images.forEach((image: File) => {
+      if (image instanceof File) {
+        formData.append("files", image);
+      }
+    });
   }
+
+  return (
+    await this.api.patch(`/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+  ).data;
+}
+
 
   // 🟢 Xóa sản phẩm theo ID
   async delete(id: any, token?: string) {

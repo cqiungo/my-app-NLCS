@@ -12,16 +12,29 @@ import { useRouter } from "next/navigation"
 import { useUser } from "@/context/UserContext"
 import categoryService from "@/services/category.service"
 import { ProductHeader } from "@/components/Product/ProductHeader"
-
+import {ProductFormDialog} from "@/components/Product/AddProd"
 interface Product {
   id: number
   name: string
   description: string
   imageUrl: string
+  images: string[]
   category: string
   quantity: number
   price: number
   createdAt: Date
+  categoryId: string | null
+  colors:colorItem[],
+  capacities:capacityItem[],
+}
+interface colorItem {
+  id:number,
+  name:string
+}
+
+interface capacityItem{
+  id:number,
+  name:string
 }
 
 export default function ProductTable() {
@@ -31,27 +44,35 @@ export default function ProductTable() {
   const token = useUser().user?.access_token
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 10000000 })
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 100000000 })
   const [minQuantity, setMinQuantity] = useState(0)
   const [categories, setCategories] = useState<string[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
   const totalValues = products.reduce((acc, product) => acc + product.price * product.quantity, 0)
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const res = await categoryService.getAll(token)
-        const categoryNames = res.map((cat: any) => cat.name)
-        setCategories(categoryNames)
-      } catch (error) {
-        console.error("Error fetching categories:", error)
-        router.push("/auth/login")
+
+
+useEffect(() => {
+  async function fetchCategories() {
+    if (!token) return; 
+
+    try {
+      const res = await categoryService.getAll(token);
+      setCategories(res.map((cat: any) => cat.name));
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        console.warn("🔒 Unauthorized, redirecting to login...");
+        router.push("/auth/login");
+      } else {
+        console.error("❌ Fetch categories error:", error);
       }
     }
+  }
 
-    if (token) fetchCategories()
-  }, [token, router])
+  fetchCategories();
+}, [token, router]);
 
   useEffect(() => {
     if (!token) {
@@ -63,7 +84,9 @@ export default function ProductTable() {
       try {
         setIsLoading(true)
         const res = await productService.getAll(token)
-        const newProducts: Product[] = res.map((product: any) => ({
+        const newProducts: Product[] = res.map((product: any) => 
+
+          ({
           id: product.id,
           name: product.name,
           description: product.description,
@@ -71,10 +94,13 @@ export default function ProductTable() {
           price: product.price,
           quantity: product.quantity ?? 0,
           createdAt: product.createdAt,
+          categoryId: product.category?.id ?? null,
           category: product.category.name,
+          images:product.images,
+          colors:product.colors,
+          capacities:product.capacities
         }))
         setProducts(newProducts)
-        console.log("Fetched products:", products)
       } catch (error) {
         console.error("Error fetching products:", error)
         router.push("/auth/login")
@@ -111,10 +137,18 @@ export default function ProductTable() {
   const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
   
   const handleDelete = (id: number) => {
-    setProducts(products.filter((p) => p.id !== id))
+      productService.delete(id, token as string)
+    .then(() => {
+      router.refresh()
+      console.log("Product deleted successfully")
+    })
+    .catch((error) => {
+      console.error("Error deleting product:", error)
+    })
   }
 
   const handleEdit = (product: Product) => {
+    setIsDialogOpen(true)
     setSelectedProduct(product)
     console.log("Edit product:", product)
   }
@@ -172,25 +206,40 @@ export default function ProductTable() {
               <X className="h-4 w-4" />
             </Button>
           )}
-          <Link href="/dashboard/product/AddProduct">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </Link>
+          <Button onClick={()=>{
+            setIsDialogOpen(true);
+            setSelectedProduct(null);
+          }} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Thêm sản phẩm
+          </Button>
         </div>
-
+          <ProductFormDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} data={
+            {
+              id: selectedProduct?.id || null,
+              name: selectedProduct?.name || "",
+              description: selectedProduct?.description || "",
+              price: selectedProduct?.price.toString() || "",
+              quantity: selectedProduct?.quantity.toString() || "",
+              category: selectedProduct?.category || "",
+              categoryId: selectedProduct?.categoryId?.toString() || "",
+              images: selectedProduct?.imageUrl ? [selectedProduct.imageUrl] : [],
+              colors: selectedProduct?.colors.map((color)=>color.id) || [],
+              capacities:selectedProduct?.capacities.map((capacity)=>capacity.id)
+            }
+            
+          }/>
         {/* Filter Controls */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           {/* Category Filter */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Category</label>
+            <label className="mb-2 block text-sm font-medium">Danh mục</label>
             <select
               value={selectedCategory || ""}
               onChange={(e) => handleFilterChange(() => setSelectedCategory(e.target.value || null))}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="">All Categories</option>
+              <option value="">Tất cả danh mục</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -201,7 +250,7 @@ export default function ProductTable() {
 
           {/* Min Price Filter */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Min Price</label>
+            <label className="mb-2 block text-sm font-medium">Giá nhỏ nhất</label>
             <Input
               type="number"
               placeholder="Min price"
@@ -213,7 +262,7 @@ export default function ProductTable() {
 
           {/* Max Price Filter */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Max Price</label>
+            <label className="mb-2 block text-sm font-medium">Giá lớn nhất</label>
             <Input
               type="number"
               placeholder="Max price"
@@ -225,7 +274,7 @@ export default function ProductTable() {
 
           {/* Min Quantity Filter */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Min Quantity</label>
+            <label className="mb-2 block text-sm font-medium">Số lượng nhỏ nhất</label>
             <Input
               type="number"
               placeholder="Min quantity"
@@ -254,14 +303,14 @@ export default function ProductTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Image</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-right">Quantity</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Hình ảnh</TableHead>
+              <TableHead>Tên sản phẩm</TableHead>
+              <TableHead>Mô tả</TableHead>
+              <TableHead>Danh mục</TableHead>
+              <TableHead className="text-right">Số lượng</TableHead>
+              <TableHead className="text-right">Giá</TableHead>
+              <TableHead>Tạo vào ngày</TableHead>
+              <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -295,11 +344,11 @@ export default function ProductTable() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEdit(product)}>
                           <Edit className="mr-2 h-4 w-4" />
-                          Edit
+                          Chỉnh sửa
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDelete(product.id)} className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          Xóa
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -309,7 +358,7 @@ export default function ProductTable() {
             ) : (
               <TableRow>
                 <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                  No products found matching your filters.
+                  Không có sản phẩm nào được tìm thấy.
                 </TableCell>
               </TableRow>
             )}
@@ -320,7 +369,7 @@ export default function ProductTable() {
       {filteredProducts.length > 0 && (
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
           <div className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
+            Trang {currentPage} của {totalPages}
           </div>
           <div className="flex gap-2">
             <Button
@@ -330,7 +379,7 @@ export default function ProductTable() {
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              Trước
             </Button>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -351,7 +400,7 @@ export default function ProductTable() {
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
             >
-              Next
+              Sau
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

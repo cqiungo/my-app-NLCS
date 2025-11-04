@@ -129,7 +129,6 @@ export default function FullFeaturedCrudGrid() {
         role: formData.role || "user",
       }
       const response = await userService.update(editUser.id, userData, token)
-      console.log("User updated successfully:", response)
       setEditFormOpen(false)
       setUser((prevUsers) =>
         prevUsers.map((user) =>
@@ -189,15 +188,6 @@ export default function FullFeaturedCrudGrid() {
           "& .textPrimary": { color: "text.primary" },
         }}
       >
-        <Button
-          onClick={() => setFormOpen(true)}
-          sx={{
-            p: 2,
-            mb: 3,
-          }}
-        >
-          Thêm người dùng
-        </Button>
 
         {loading ? (
           <Stack sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>

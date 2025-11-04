@@ -16,58 +16,10 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 // Menu items.
-const items = [
-  {
-    index: 0,
-    url: "#",
-    icon: Home,
-  },
-  {
-    index: 1,
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    index: 2,
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    index: 3,
-    url: "#",
-    icon: Search,
-  },
-  {
-    index: 4,
-    url: "#",
-    icon: Settings,
-  },
-]
 
 export function AppSidebar() {
   return (
     <Sidebar className="justify-between" variant="floating">
-      <SidebarHeader>
-        
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup >
-          <SidebarGroupContent className="flex justify-items-center " >
-            <SidebarMenu className="justify-items-center">
-              {items.map((item) => (
-                <SidebarMenuItem key={item.index}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              {/* <SidebarSeparator /> */}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
       <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -89,12 +41,6 @@ export function AppSidebar() {
                   side="top"
                   className="w-[--radix-popper-anchor-width]"
                 >
-                  <DropdownMenuItem>
-                    <span>Account</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <span>Billing</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <span>Sign out</span>
                   </DropdownMenuItem>

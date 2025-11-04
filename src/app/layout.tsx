@@ -4,6 +4,7 @@ import { SessionProvider } from 'next-auth/react'
 import { UserProvider } from '@/context/UserContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import "./globals.css"
+import {CartProvider} from '@/context/CartContext'; 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
   return (
@@ -11,7 +12,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body >
               <SessionProvider>
                 <UserProvider>
-                  <NextAppProvider>{children}</NextAppProvider>
+                  <NextAppProvider>
+                    <CartProvider>
+                      {children}
+                    </CartProvider>
+                  </NextAppProvider>
                 </UserProvider>
               </SessionProvider>
       </body>

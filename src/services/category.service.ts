@@ -1,5 +1,5 @@
-// services/user.service.ts
-import createApiClient from './api.service';
+// services/category.service.ts
+import createApiClient from "./api.service";
 
 class CategoryService {
   api: any;
@@ -7,54 +7,71 @@ class CategoryService {
     this.api = createApiClient(baseUrl);
   }
 
+  async create(data: any, token?: string) {
+    return (
+      await this.api.post("/categories", data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    ).data;
+  }
 
   async getAll(token?: string) {
-    return (await this.api.get('/categories',{
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      }
-    })).data;
+    return (
+      await this.api.get("/categories", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    ).data;
   }
 
   async deleteAll(token?: string) {
-    return (await this.api.delete('/',{
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      }
-    })).data;
+    return (
+      await this.api.delete("/categories", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    ).data;
   }
 
-  async getByPage(page: any) {
+  async getByPage(page: number) {
     return (
-      await this.api.get('/by/pages', {
+      await this.api.get("/categories/by/pages", {
         params: { page },
       })
     ).data;
   }
 
-  async get(id: any) {
-    return (await this.api.get(`/${id}`)).data;
+  async get(id: string) {
+    return (await this.api.get(`/categories/${id}`)).data;
   }
 
-  async update(id: any, data: any,token?: string) {
-    console.log(token);
-    return (await this.api.patch(`/user/${id}`, data,{
-      headers:{
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Assuming token is part of data
-      }
-    })).data;
+  async update(id: string, data: any, token?: string) {
+    return (
+      await this.api.put(`/categories/${id}`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    ).data;
   }
 
-  async delete(id: any,token:string) {
-    return (await this.api.delete(`/users/${id}`,{
-      headers:{
-        'Cotent-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    })).data;
+  async delete(id: string, token?: string) {
+    return (
+      await this.api.delete(`/categories/${id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    ).data;
   }
 }
 

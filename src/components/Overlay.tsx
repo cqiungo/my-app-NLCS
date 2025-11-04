@@ -13,29 +13,28 @@ function Carousel() {
       id: 1,
       title: "Camera Pro",
       description: "Chụp ảnh chuyên nghiệp với công nghệ AI tiên tiến",
-      image: "/professional-camera-iphone.jpg",
+      image: "https://i.pinimg.com/1200x/a1/ba/b9/a1bab9c3e46ba699080577363b3b275a.jpg",
     },
     {
       id: 2,
       title: "A18 Pro Chip",
       description: "Hiệu năng đỉnh cao cho mọi tác vụ",
-      image: "/processor-chip-technology.jpg",
+      image: "https://i.pinimg.com/736x/bf/9e/a5/bf9ea5d9030722b23cb26a19817865d4.jpg",
     },
     {
       id: 3,
       title: "Màn hình OLED",
       description: "Hiển thị sống động với độ tương phản vô hạn",
-      image: "/oled-display-screen.jpg",
+      image: "https://i.pinimg.com/736x/9f/59/29/9f5929fd259d4ba646e8c35c54a50428.jpg",
     },
     {
       id: 4,
       title: "Pin lâu",
       description: "Sử dụng cả ngày với công nghệ pin mới",
-      image: "/battery-technology-power.jpg",
+      image: "https://i.pinimg.com/1200x/c6/b2/47/c6b247d80f16c63aa2f6666608c3313a.jpg",
     },
   ]
 
-  // Auto-play carousel
   useEffect(() => {
     if (!autoPlay) return
     const interval = setInterval(() => {
@@ -113,7 +112,7 @@ function Carousel() {
 
 export default function Landing3D() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 overflow-hidden">
       <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen px-6 lg:px-16 py-20 gap-12 lg:gap-16">
         {/* Left side - Text content */}
         <div className="lg:w-1/2 z-10 text-slate-900 animate-fade-in">

@@ -30,22 +30,22 @@ export function ProductHeader({totalProductsProp, totalCategoriesProp, totalValu
 
   const statCards = [
     {
-      label: "Total Products",
+      label: "Tổng sản phẩm",
       value: stats.totalProducts,
       icon: Package,
       color: "from-blue-500/10 to-blue-500/5",
       iconColor: "text-blue-600",
     },
     {
-      label: "Categories",
+      label: "Danh mục tổng",
       value: stats.totalCategories,
       icon: ShoppingCart,
       color: "from-purple-500/10 to-purple-500/5",
       iconColor: "text-purple-600",
     },
     {
-      label: "Total Inventory Value",
-      value: `$${(stats.totalValue / 1000).toFixed(1)}K`,
+      label: "Tổng giá trị",
+      value: `${(stats.totalValue / 1000).toFixed(1)}VNĐ`,
       icon: TrendingUp,
       color: "from-emerald-500/10 to-emerald-500/5",
       iconColor: "text-emerald-600",
@@ -56,8 +56,8 @@ export function ProductHeader({totalProductsProp, totalCategoriesProp, totalValu
     <div className="space-y-6">
       {/* Header Section */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Product Management</h1>
-        <p className="text-lg text-muted-foreground">Manage and organize your product inventory</p>
+        <h1 className="text-4xl font-bold tracking-tight">Quản lý sản phẩm</h1>
+        <p className="text-lg text-muted-foreground">Quản lý và tổ chức tồn kho</p>
       </div>
 
       {/* Stats Cards */}

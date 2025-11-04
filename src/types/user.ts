@@ -1,5 +1,5 @@
 interface IUser {
-  _id: number;
+  id: number;
   name: string;
   email: string;
   image: string;

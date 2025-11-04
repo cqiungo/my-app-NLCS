@@ -1,237 +1,319 @@
 "use client"
 import * as React from "react"
-import Box from "@mui/material/Box"
-import Button from "@mui/material/Button"
-import Checkbox from "@mui/material/Checkbox"
-import CssBaseline from "@mui/material/CssBaseline"
-import Divider from "@mui/material/Divider"
-import FormControlLabel from "@mui/material/FormControlLabel"
-import FormLabel from "@mui/material/FormLabel"
-import FormControl from "@mui/material/FormControl"
-import Link from "@mui/material/Link"
-import TextField from "@mui/material/TextField"
-import Typography from "@mui/material/Typography"
-import Stack from "@mui/material/Stack"
-import MuiCard from "@mui/material/Card"
-import { styled } from "@mui/material/styles"
-import AppTheme from "../shared-theme/AppTheme"
-import ColorModeSelect from "../shared-theme/ColorModeSelect"
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from "../CustomeIcons"
+import { Mail, Lock, User, Phone, MapPin, Eye, EyeOff, Loader2 } from "lucide-react"
 import userService from "@/services/user.service"
 import { useRouter } from "next/navigation"
 
-const Card = styled(MuiCard)(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  alignSelf: "center",
-  width: "100%",
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: "auto",
-  boxShadow: "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
-  [theme.breakpoints.up("sm")]: {
-    width: "450px",
-  },
-  ...theme.applyStyles("dark", {
-    boxShadow: "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
-  }),
-}))
-
-const SignUpContainer = styled(Stack)(({ theme }) => ({
-  height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
-  minHeight: "100%",
-  padding: theme.spacing(2),
-  [theme.breakpoints.up("sm")]: {
-    padding: theme.spacing(4),
-  },
-  "&::before": {
-    content: '""',
-    display: "block",
-    position: "absolute",
-    zIndex: -1,
-    inset: 0,
-    backgroundImage: "radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))",
-    backgroundRepeat: "no-repeat",
-    ...theme.applyStyles("dark", {
-      backgroundImage: "radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))",
-    }),
-  },
-}))
-
-export default function SignUp(props: { disableCustomTheme?: boolean }) {
+export default function SignUpForm() {
   const router = useRouter()
-  const [emailError, setEmailError] = React.useState(false)
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState("")
-  const [passwordError, setPasswordError] = React.useState(false)
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("")
-  const [confirmPasswordError, setConfirmPasswordError] = React.useState(false)
-  const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] = React.useState("")
-  const [nameError, setNameError] = React.useState(false)
-  const [nameErrorMessage, setNameErrorMessage] = React.useState("")
+  const [loading, setLoading] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
+
+  const [formData, setFormData] = React.useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    password: "",
+    confirmPassword: "",
+  })
+
+  const [errors, setErrors] = React.useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    password: "",
+    confirmPassword: "",
+  })
 
   const validateInputs = () => {
-    const email = document.getElementById("email") as HTMLInputElement
-    const password = document.getElementById("password") as HTMLInputElement
-    const confirmPassword = document.getElementById("confirmPassword") as HTMLInputElement
-    const name = document.getElementById("name") as HTMLInputElement
-
+    const newErrors = {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      password: "",
+      confirmPassword: "",
+    }
     let isValid = true
 
-    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-      setEmailError(true)
-      setEmailErrorMessage("Địa chỉ email không hợp lệ")
+    if (!formData.name.trim()) {
+      newErrors.name = "Họ tên là bắt buộc"
       isValid = false
-    } else {
-      setEmailError(false)
-      setEmailErrorMessage("")
     }
 
-    if (!password.value || password.value.length < 6) {
-      setPasswordError(true)
-      setPasswordErrorMessage("Password must be at least 6 characters long.")
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Địa chỉ email không hợp lệ"
       isValid = false
-    } else {
-      setPasswordError(false)
-      setPasswordErrorMessage("")
     }
 
-    if (!confirmPassword.value || confirmPassword.value !== password.value) {
-      setConfirmPasswordError(true)
-      setConfirmPasswordErrorMessage("Passwords do not match.")
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Số điện thoại là bắt buộc"
       isValid = false
-    } else {
-      setConfirmPasswordError(false)
-      setConfirmPasswordErrorMessage("")
+    } else if (!/^[0-9]{10,}$/.test(formData.phone.replace(/\D/g, ""))) {
+      newErrors.phone = "Số điện thoại không hợp lệ"
+      isValid = false
     }
 
-    if (!name.value || name.value.length < 1) {
-      setNameError(true)
-      setNameErrorMessage("Name is required.")
+    if (!formData.address.trim()) {
+      newErrors.address = "Địa chỉ là bắt buộc"
       isValid = false
-    } else {
-      setNameError(false)
-      setNameErrorMessage("")
     }
 
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự"
+      isValid = false
+    }
+
+    if (formData.confirmPassword !== formData.password) {
+      newErrors.confirmPassword = "Mật khẩu không khớp"
+      isValid = false
+    }
+
+    setErrors(newErrors)
     return isValid
   }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    if (nameError || emailError || passwordError || confirmPasswordError) {
-      event.preventDefault()
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    if (errors[name as keyof typeof errors]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }))
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    if (!validateInputs()) {
       return
     }
 
-    const data = new FormData(event.currentTarget)
-    await userService
-      .register({
-        name: data.get("name"),
-        email: data.get("email"),
-        password: data.get("password"),
+    setLoading(true)
+    try {
+      await userService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        address: formData.address,
       })
-      .then(() => {
-        router.push("/auth/login")
-      })
-      .catch((error) => {
-        console.error("Registration failed:", error)
-        alert("Registration failed. Please try again.")
-      })
+      router.push("/auth/login")
+    } catch (error) {
+      console.error("Registration failed:", error)
+      setErrors((prev) => ({
+        ...prev,
+        email: "Đăng ký thất bại. Vui lòng thử lại.",
+      }))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <AppTheme {...props}>
-      <CssBaseline enableColorScheme />
-      <ColorModeSelect sx={{ position: "fixed", top: "1rem", right: "1rem" }} />
-      <SignUpContainer direction="column" justifyContent="space-between">
-        <Card variant="outlined">
-          <SitemarkIcon />
-          <Typography component="h1" variant="h4" sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}>
-            Sign up
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            method="post"
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <FormControl>
-              <FormLabel htmlFor="name">Họ tên</FormLabel>
-              <TextField
-                autoComplete="name"
-                name="name"
-                required
-                fullWidth
-                id="name"
-                placeholder="Jon Snow"
-                error={nameError}
-                helperText={nameErrorMessage}
-                color={nameError ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <TextField
-                required
-                fullWidth
-                id="email"
-                placeholder="your@email.com"
-                name="email"
-                autoComplete="email"
-                variant="outlined"
-                error={emailError}
-                helperText={emailErrorMessage}
-                color={passwordError ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="password">Mật khẩu</FormLabel>
-              <TextField
-                required
-                fullWidth
-                name="password"
-                placeholder="••••••"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                variant="outlined"
-                error={passwordError}
-                helperText={passwordErrorMessage}
-                color={passwordError ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="confirmPassword">Xác nhận mật khẩu</FormLabel>
-              <TextField
-                required
-                fullWidth
-                name="confirmPassword"
-                placeholder="••••••"
-                type="password"
-                id="confirmPassword"
-                autoComplete="new-password"
-                variant="outlined"
-                error={confirmPasswordError}
-                helperText={confirmPasswordErrorMessage}
-                color={confirmPasswordError ? "error" : "primary"}
-              />
-            </FormControl>
-            <Button type="submit" fullWidth variant="contained" onClick={validateInputs}>
-              Đăng ký
-            </Button>
-          </Box>
-          <Divider>
-            <Typography sx={{ color: "text.secondary" }}>or</Typography>
-          </Divider>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography sx={{ textAlign: "center" }}>
-              Đã có tài khoản ?{" "}
-              <Link href="/auth/login" variant="body2" sx={{ alignSelf: "center" }}>
-                Đăng nhập
-              </Link>
-            </Typography>
-          </Box>
-        </Card>
-      </SignUpContainer>
-    </AppTheme>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200 to-purple-200 dark:from-blue-900 dark:to-purple-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-200 to-pink-200 dark:from-purple-900 dark:to-pink-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute -bottom-8 left-20 w-96 h-96 bg-gradient-to-br from-pink-200 to-blue-200 dark:from-pink-900 dark:to-blue-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20 dark:border-slate-700/20">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Tạo tài khoản</h1>
+            <p className="text-slate-600 dark:text-slate-400">Tham gia cộng đồng của chúng tôi ngay hôm nay</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name Field */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Họ tên</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Nhập họ tên của bạn"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                    errors.name
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-blue-500"
+                  } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500`}
+                />
+              </div>
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            </div>
+
+            {/* Email Field */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="your@email.com"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                    errors.email
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-blue-500"
+                  } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500`}
+                />
+              </div>
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            </div>
+
+            {/* Phone Field */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Số điện thoại</label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="0123456789"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                    errors.phone
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-blue-500"
+                  } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500`}
+                />
+              </div>
+              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            </div>
+
+            {/* Address Field */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Địa chỉ</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Nhập địa chỉ của bạn"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                    errors.address
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-blue-500"
+                  } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500`}
+                />
+              </div>
+              {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Mật khẩu</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••"
+                  className={`w-full pl-10 pr-10 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                    errors.password
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-blue-500"
+                  } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            </div>
+
+            {/* Confirm Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Xác nhận mật khẩu
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••"
+                  className={`w-full pl-10 pr-10 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                    errors.confirmPassword
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-blue-500"
+                  } bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-slate-400 disabled:to-slate-400 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Tạo tài khoản"
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center gap-3">
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+            <span className="text-sm text-slate-500 dark:text-slate-400">hoặc</span>
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+          </div>
+
+          {/* Sign In Link */}
+          <p className="text-center text-slate-600 dark:text-slate-400">
+            Đã có tài khoản?{" "}
+            <a
+              href="/auth/login"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors"
+            >
+              Đăng nhập
+            </a>
+          </p>
+        </div>
+
+        {/* Footer Text */}
+      </div>
+    </div>
   )
 }

@@ -1,270 +1,199 @@
-'use client'
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import CssBaseline from '@mui/material/CssBaseline';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Divider from '@mui/material/Divider';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import MuiCard from '@mui/material/Card';
-import { styled } from '@mui/material/styles';
-import ForgotPassword from '../ForgotPassword';
-import IconButton from '@mui/material/IconButton';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import AppTheme from '../shared-theme/AppTheme';
-import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../CustomeIcons';
-import { getSession, signIn, useSession } from "next-auth/react";
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/context/UserContext';
-import InputAdornment from '@mui/material/InputAdornment';
+"use client"
+import type * as React from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { signIn, useSession, getSession } from "next-auth/react"
+import { useUser } from "@/context/UserContext"
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
 
-const Card = styled(MuiCard)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignSelf: 'center',
-  width: '100%',
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: 'auto',
-  [theme.breakpoints.up('sm')]: {
-    maxWidth: '450px',
-  },
-  boxShadow:
-    'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-  ...theme.applyStyles('dark', {
-    boxShadow:
-      'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
-  }),
-}));
-
-const SignInContainer = styled(Stack)(({ theme }) => ({
-  height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
-  minHeight: '100%',
-  padding: theme.spacing(2),
-  [theme.breakpoints.up('sm')]: {
-    padding: theme.spacing(4),
-  },
-  '&::before': {
-    content: '""',
-    display: 'block',
-    position: 'absolute',
-    zIndex: -1,
-    inset: 0,
-    backgroundImage:
-      'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-    backgroundRepeat: 'no-repeat',
-    ...theme.applyStyles('dark', {
-      backgroundImage:
-        'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
-    }),
-  },
-}));
-
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
-  const [emailError, setEmailError] = React.useState(false);
-  const [showPassWord,setShowPassword]=React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-  const [open, setOpen] = React.useState(false);
-  const [login,setLogin]=React.useState(false)
+export default function SignInForm() {
+  const [emailError, setEmailError] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [emailErrorMessage, setEmailErrorMessage] = useState("")
+  const [passwordError, setPasswordError] = useState(false)
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const userContext = useUser();
-  const session = useSession();
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
+  const userContext = useUser()
+  const session = useSession()
 
   const validateInputs = () => {
-    const email = document.getElementById('email') as HTMLInputElement;
-    const password = document.getElementById('password') as HTMLInputElement;
+    const email = document.getElementById("email") as HTMLInputElement
+    const password = document.getElementById("password") as HTMLInputElement
 
-    let isValid = true;
+    let isValid = true
 
     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-      setEmailError(true);
-      setEmailErrorMessage('Nhập email hợp lệ.');
-      isValid = false;
+      setEmailError(true)
+      setEmailErrorMessage("Nhập email hợp lệ.")
+      isValid = false
     } else {
-      setEmailError(false);
-      setEmailErrorMessage('');
+      setEmailError(false)
+      setEmailErrorMessage("")
     }
 
     if (!password.value || password.value.length < 6) {
-      setPasswordError(true);
-      setPasswordErrorMessage('Mật khẩu ít nhất 6 ký tự.');
-      isValid = false;
+      setPasswordError(true)
+      setPasswordErrorMessage("Mật khẩu ít nhất 6 ký tự.")
+      isValid = false
     } else {
-      setPasswordError(false);
-      setPasswordErrorMessage('');
+      setPasswordError(false)
+      setPasswordErrorMessage("")
     }
 
-    return isValid;
-  };
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault(); // tránh mất focus khi click icon
-  };
-
-const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-
-  // Chạy validateInputs() để kiểm tra lỗi
-  const isValid = validateInputs();
-  if (!isValid) return; // nếu sai, dừng lại
-
-  const user = new FormData(event.currentTarget);
-  console.log({
-    email: user.get("email"),
-    password: user.get("password"),
-  });
-  setLogin(true);
-
-  const res = await signIn("credentials", {
-    redirect: false,
-    email: user.get("email"),
-    password: user.get("password"),
-  });
-
-  console.log("session after login:", session.data?.user.role);
-  if (res.error) {
-    console.error("Login error:", res.error);
-    setEmailError(true);
-    setPasswordError(true);
-    setPasswordErrorMessage('Email hoặc mật khẩu không đúng');
-    setLogin(false);
-    return;
+    return isValid
   }
 
-  const sesion = await getSession();
-  const role = sesion?.user?.role;
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-  if (role === "ADMIN") router.push("/dashboard");
-  else if (role === "USER") router.push("/");
-};
+    const isValid = validateInputs()
+    if (!isValid) return
+
+    const user = new FormData(event.currentTarget)
+    setIsLoading(true)
+
+    const res = await signIn("credentials", {
+      redirect: false,
+      email: user.get("email"),
+      password: user.get("password"),
+    })
+
+    if (res.error) {
+      setEmailError(true)
+      setPasswordError(true)
+      setPasswordErrorMessage("Email hoặc mật khẩu không đúng")
+      setIsLoading(false)
+      return
+    }
+
+    const sesion = await getSession()
+    const role = sesion?.user?.role
+
+    if (role === "ADMIN") router.push("/dashboard")
+    else if (role === "USER") router.push("/")
+  }
 
   return (
-    <div>
-      <AppTheme {...props}>
-      <CssBaseline enableColorScheme />
-      <SignInContainer direction="column" justifyContent="space-between">
-        <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
-        <Card variant="outlined">
-          <SitemarkIcon />
-          <Typography
-            component="h1"
-            variant="h4"
-            sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
-          >
-            Sign in
-          </Typography>
-          <Box
-            onSubmit={handleSubmit}
-            component="form"
-            noValidate
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: '100%',
-              gap: 2,
-            }}
-          >
-            <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <TextField
-                error={emailError}
-                helperText={emailErrorMessage}
-                id="email"
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                autoComplete="email"
-                autoFocus
-                required
-                fullWidth
-                variant="outlined"
-                color={emailError ? 'error' : 'primary'}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
-              <TextField
-                error={passwordError}
-                helperText={passwordErrorMessage}
-                name="password"
-                placeholder="••••••"
-                type={showPassWord?'text':'password'}
-                id="password"
-                autoComplete="current-password"
-                autoFocus
-                slotProps={{
-                        input: {
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={handleClickShowPassword}
-                                onMouseDown={handleMouseDownPassword}
-                                edge="end"
-                                aria-label="toggle password visibility"
-                              >
-                                {showPassWord ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        },
-                      }}                
-                required
-                fullWidth
-                variant="outlined"
-                color={passwordError ? 'error' : 'primary'}
-              />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute bottom-20 right-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+      </div>
 
-            </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
-            <Button
+      <div className="relative w-full max-w-md">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl opacity-20"></div>
+
+        <div className="relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+          <div className="mb-8">
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl mb-4 mx-auto">
+              <Lock className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-white text-center mb-2">Đăng nhập</h1>
+            <p className="text-slate-400 text-center text-sm">Chào mừng bạn quay lại</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3.5 w-5 h-5 text-slate-500" />
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  autoFocus
+                  required
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-700/50 border rounded-lg text-white placeholder-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    emailError ? "border-red-500/50" : "border-slate-600/50 hover:border-slate-500/50"
+                  }`}
+                />
+              </div>
+              {emailErrorMessage && <p className="mt-1.5 text-sm text-red-400">{emailErrorMessage}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3.5 w-5 h-5 text-slate-500" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="••••••"
+                  autoComplete="current-password"
+                  required
+                  className={`w-full pl-10 pr-12 py-3 bg-slate-700/50 border rounded-lg text-white placeholder-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    passwordError ? "border-red-500/50" : "border-slate-600/50 hover:border-slate-500/50"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {passwordErrorMessage && <p className="mt-1.5 text-sm text-red-400">{passwordErrorMessage}</p>}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  className="w-4 h-4 bg-slate-700 border border-slate-600 rounded cursor-pointer accent-blue-500"
+                />
+                <span className="ml-2 text-sm text-slate-400">Nhớ tôi</span>
+              </label>
+              <a href="#" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                Quên mật khẩu?
+              </a>
+            </div>
+
+            <button
               type="submit"
-              fullWidth
-              variant="contained"
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-slate-600 disabled:to-slate-600 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group disabled:cursor-not-allowed"
             >
-              Sign in
-            </Button>
-            <Link
-              component="button"
-              type="button"
-              onClick={handleClickOpen}
-              variant="body2"
-              sx={{ alignSelf: 'center' }}
-            >
-              Forgot your password?
-            </Link>
-          </Box>
-          <Divider>or</Divider>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ textAlign: 'center' }}>
-              Don&apos;t have an account?{' '}
-              <Link
-                href="/auth/register"
-                variant="body2"
-                sx={{ alignSelf: 'center' }}
-              >
-                Sign up
-              </Link>
-            </Typography>
-          </Box>
-        </Card>
-      </SignInContainer>
-    </AppTheme>
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Đang xử lý...
+                </>
+              ) : (
+                <>
+                  Đăng nhập
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="flex-1 h-px bg-slate-600/50"></div>
+            <span className="text-xs text-slate-500">hoặc</span>
+            <div className="flex-1 h-px bg-slate-600/50"></div>
+          </div>
+
+          <p className="text-center text-slate-400 text-sm">
+            Chưa có tài khoản?{" "}
+            <a href="/auth/register" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+              Đăng ký ngay
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
-  );
+  )
 }

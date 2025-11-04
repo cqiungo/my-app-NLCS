@@ -24,13 +24,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           console.warn("❌ Sai email hoặc mật khẩu:", data);
           return null;
         }
-
         return {
           id: data.user.id,
           email: data.user.email,
           name: data.user.name,
           accessToken: data.access_token,
           role: data.user.role,
+          phone: data.user.phone,
+          address: data.user.address,
         };
       },
     }),
